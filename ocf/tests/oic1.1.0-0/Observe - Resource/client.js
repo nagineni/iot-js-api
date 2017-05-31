@@ -29,6 +29,13 @@ var addSecondPositiveListener = true;
 
 console.log( JSON.stringify( { assertionCount: 21 } ) );
 
+// Error handler
+function errorHandler(error) {
+     console.log("Server responded with error", error.message); }
+
+// Add error event listener.
+client.on("error", errorHandler);
+
 function secondPositiveListener( resource ) {
 	secondPositiveCount++;
 	console.log( JSON.stringify( { assertion: "ok", arguments: [
@@ -109,10 +116,18 @@ function negativeListener( resource ) {
 }
 
 function performObservation( resource ) {
-	resource.on( "update", positiveListener );
+	//resource.on( "update", positiveListener );
 
 	client
 		.removeListener( "resourcefound", performObservation )
+		.retrieve( resource, { scale: -1 }, positiveListener ).catch( function( error ) {
+			console.log( JSON.stringify( { assertion: "ok", arguments: [
+				false, "Unexpected error attaching positiveListener listener: " +
+					( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+			] } ) );
+		} );
+
+	client
 		.retrieve( resource, { scale: -1 }, negativeListener ).catch( function( error ) {
 			console.log( JSON.stringify( { assertion: "ok", arguments: [
 				false, "Unexpected error attaching negative listener: " +
